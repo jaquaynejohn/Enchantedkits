@@ -1,5 +1,7 @@
 package com.enchantedsmp.enchantedkits;
 
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.model.user.User;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,17 +18,68 @@ import net.minecraft.world.item.Items;
 
 public class KitMenu {
 
+    private static final String[] RANKS = {
+        "owner", "coowner", "admin", "mod",
+        "media", "helperplus", "helper", "default"
+    };
+
+    private static final String[] NAMES = {
+        "Owner Kit", "Co-Owner Kit", "Admin Kit", "Mod Kit",
+        "Media Kit", "Helper+ Kit", "Helper Kit", "Default Kit"
+    };
+
+    private static final Item[] ICONS = {
+        Items.COMMAND_BLOCK,
+        Items.NETHER_STAR,
+        Items.ENCHANTED_GOLDEN_APPLE,
+        Items.SHIELD,
+        Items.AMETHYST_SHARD,
+        Items.EMERALD,
+        Items.IRON_INGOT,
+        Items.WOODEN_SWORD
+    };
+
+    private static final int[] SLOTS = {
+        10, 11, 12, 13, 14, 15, 16, 22
+    };
+
     public static void open(ServerPlayer player) {
+
         SimpleContainer inventory = new SimpleContainer(27);
 
-        inventory.setItem(10, named(Items.COMMAND_BLOCK, "Owner Kit"));
-        inventory.setItem(11, named(Items.NETHER_STAR, "Co-Owner Kit"));
-        inventory.setItem(12, named(Items.ENCHANTED_GOLDEN_APPLE, "Admin Kit"));
-        inventory.setItem(13, named(Items.SHIELD, "Mod Kit"));
-        inventory.setItem(14, named(Items.AMETHYST_SHARD, "Media Kit"));
-        inventory.setItem(15, named(Items.EMERALD, "Helper+ Kit"));
-        inventory.setItem(16, named(Items.IRON_INGOT, "Helper Kit"));
-        inventory.setItem(22, named(Items.WOODEN_SWORD, "Default Kit"));
+        boolean isOp = player.getServer().getPlayerList()
+            .isOp(player.getGameProfile());
+
+        User user = LuckPermsProvider.get()
+            .getUserManager().getUser(player.getUUID());
+
+        String playerRank = user == null ? "" :
+            user.getPrimaryGroup().toLowerCase();
+
+        for (int i = 0; i < RANKS.length; i++) {
+
+            boolean unlocked = isOp || playerRank.equals(RANKS[i]);
+
+            ItemStack icon;
+
+            if (unlocked) {
+                icon = named(ICONS[i], NAMES[i]);
+            } else {
+                icon = named(
+                    Items.BARRIER,
+                    "§c✖ " + NAMES[i] + " (Locked)"
+                );
+            }
+
+            inventory.setItem(SLOTS[i], icon);
+        }
+
+        if (isOp) {
+            inventory.setItem(
+                26,
+                named(Items.ANVIL, "§6Kit Editor (OP Only)")
+            );
+        }
 
         player.openMenu(new SimpleMenuProvider(
             (syncId, playerInventory, p) ->
@@ -37,27 +90,86 @@ public class KitMenu {
 
     private static ItemStack named(Item item, String name) {
         ItemStack stack = new ItemStack(item);
-        stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
+        stack.set(
+            DataComponents.CUSTOM_NAME,
+            Component.literal(name)
+        );
         return stack;
     }
 
     private static class KitChestMenu extends ChestMenu {
 
-        KitChestMenu(int syncId, Inventory playerInventory,
-                     SimpleContainer container) {
-            super(MenuType.GENERIC_9x3, syncId, playerInventory, container, 3);
+        KitChestMenu(
+            int syncId,
+            Inventory playerInventory,
+            SimpleContainer container
+        ) {
+            super(
+                MenuType.GENERIC_9x3,
+                syncId,
+                playerInventory,
+                container,
+                3
+            );
         }
 
         @Override
-        public void clicked(int slot, int button,
-                            ContainerInput input, Player player) {
+        public void clicked(
+            int slot,
+            int button,
+            ContainerInput input,
+            Player player
+        ) {
 
             if (slot >= 0 && slot < 27) {
+
                 if (player instanceof ServerPlayer serverPlayer) {
-                    serverPlayer.sendSystemMessage(
-                        Component.literal("Kit selected! Claim system coming next.")
-                    );
+
+                    boolean isOp = serverPlayer.getServer()
+                        .getPlayerList()
+                        .isOp(serverPlayer.getGameProfile());
+
+                    for (int i = 0; i < RANKS.length; i++) {
+
+                        if (slot == SLOTS[i]) {
+
+                            User user = LuckPermsProvider.get()
+                                .getUserManager()
+                                .getUser(serverPlayer.getUUID());
+
+                            String playerRank = user == null ? "" :
+                                user.getPrimaryGroup().toLowerCase();
+
+                            if (!isOp && !playerRank.equals(RANKS[i])) {
+                                serverPlayer.sendSystemMessage(
+                                    Component.literal(
+                                        "§c✖ You cannot claim this rank's kit!"
+                                    )
+                                );
+                                return;
+                            }
+
+                            serverPlayer.closeContainer();
+
+                            KitClaimManager.claimArmor(
+                                serverPlayer,
+                                RANKS[i]
+                            );
+
+                            return;
+                        }
+                    }
+
+                    if (slot == 26 && isOp) {
+                        serverPlayer.sendSystemMessage(
+                            Component.literal(
+                                "Kit Editor will be added next!"
+                            )
+                        );
+                        return;
+                    }
                 }
+
                 return;
             }
 
