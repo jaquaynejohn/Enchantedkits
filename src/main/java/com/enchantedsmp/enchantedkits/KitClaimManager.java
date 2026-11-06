@@ -90,7 +90,7 @@ public class KitClaimManager {
             }
         }
 
-        int result = player.getServer().getCommands()
+        int result = player.level().getServer().getCommands()
             .performPrefixedCommand(
                 player.createCommandSourceStack(),
                 "function enchantedkits:kitarmor_" + selectedRank
