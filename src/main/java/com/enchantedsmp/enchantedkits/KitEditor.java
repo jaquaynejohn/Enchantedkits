@@ -102,7 +102,7 @@ public class KitEditor {
 
         inventory.setItem(
             53,
-            named(Items.LIME_DYE, "§aSave and Close")
+            named(Items.EMERALD, "§aSave and Close")
         );
 
         player.openMenu(new SimpleMenuProvider(
