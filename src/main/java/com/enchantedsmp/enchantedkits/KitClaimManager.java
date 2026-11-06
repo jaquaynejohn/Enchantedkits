@@ -12,35 +12,40 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.Set;
 
 public class KitClaimManager {
 
     private static final long COOLDOWN =
         24L * 60L * 60L * 1000L;
 
-    private static final Path FILE = FabricLoader.getInstance()
-        .getConfigDir()
-        .resolve("enchantedkits-cooldowns.properties");
-
-    private static final Properties COOLDOWNS = new Properties();
-
-    private static final String[] RANKS = {
+    private static final Set<String> RANKS = Set.of(
         "owner", "coowner", "admin", "mod",
         "media", "helperplus", "helper", "default"
-    };
+    );
+
+    private static final Path FILE =
+        FabricLoader.getInstance().getConfigDir()
+            .resolve("enchantedkits-cooldowns.properties");
+
+    private static final Properties COOLDOWNS = new Properties();
 
     static {
         load();
     }
 
-    public static void claimArmor(ServerPlayer player, String selectedRank) {
+    public static void claimArmor(
+        ServerPlayer player,
+        String selectedRank
+    ) {
         String rank = selectedRank.toLowerCase(Locale.ROOT);
 
-        if (!Arrays.asList(RANKS).contains(rank)) {
-            player.sendSystemMessage(Component.literal("Invalid kit."));
+        if (!RANKS.contains(rank)) {
+            player.sendSystemMessage(
+                Component.literal("Invalid kit.")
+            );
             return;
         }
 
@@ -62,7 +67,9 @@ public class KitClaimManager {
 
         if (!isOp && !playerRank.equals(rank)) {
             player.sendSystemMessage(
-                Component.literal("You can only claim your own rank kit!")
+                Component.literal(
+                    "You can only claim your own rank kit!"
+                )
             );
             return;
         }
@@ -133,7 +140,10 @@ public class KitClaimManager {
             Files.createDirectories(FILE.getParent());
 
             try (OutputStream output = Files.newOutputStream(FILE)) {
-                COOLDOWNS.store(output, "EnchantedKits cooldowns");
+                COOLDOWNS.store(
+                    output,
+                    "EnchantedKits cooldowns"
+                );
             }
         } catch (IOException exception) {
             exception.printStackTrace();
