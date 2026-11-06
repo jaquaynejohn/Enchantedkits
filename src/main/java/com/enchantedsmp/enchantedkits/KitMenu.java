@@ -1,3 +1,4 @@
+import net.minecraft.server.players.NameAndId;
 package com.enchantedsmp.enchantedkits;
 
 import net.luckperms.api.LuckPermsProvider;
@@ -47,8 +48,9 @@ public class KitMenu {
 
         SimpleContainer inventory = new SimpleContainer(27);
 
-        boolean isOp = player.getServer().getPlayerList()
-            .isOp(player.getGameProfile());
+        boolean isOp = player.level().getServer()
+    .getPlayerList()
+    .isOp(new NameAndId(player.getGameProfile()));
 
         User user = LuckPermsProvider.get()
             .getUserManager().getUser(player.getUUID());
@@ -123,11 +125,11 @@ public class KitMenu {
 
             if (slot >= 0 && slot < 27) {
 
-                if (player instanceof ServerPlayer serverPlayer) {
+                if (player instanceof ServerPlayer serverPlayer) 
 
-                    boolean isOp = serverPlayer.getServer()
-                        .getPlayerList()
-                        .isOp(serverPlayer.getGameProfile());
+                    boolean isOp = serverPlayer.level().getServer()
+    .getPlayerList()
+    .isOp(new NameAndId(serverPlayer.getGameProfile()));
 
                     for (int i = 0; i < RANKS.length; i++) {
 
