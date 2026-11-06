@@ -155,10 +155,12 @@ public class KitEditor {
 
                 if (array.get(i).isJsonNull()) continue;
 
+                final int slot = i;
+
                 ItemStack.CODEC.parse(ops, array.get(i))
                     .result()
                     .ifPresent(stack ->
-                        inventory.setItem(i, stack)
+                        inventory.setItem(slot, stack)
                     );
             }
 
