@@ -1,3 +1,4 @@
+
 package com.enchantedsmp.enchantedkits;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -35,22 +36,15 @@ public class KitClaimManager {
         load();
     }
 
-    public static void claimArmor(
-        ServerPlayer player,
-        String selectedRank
-    ) {
+    public static void claimArmor(ServerPlayer player, String selectedRank) {
         String rank = selectedRank.toLowerCase(Locale.ROOT);
 
         if (!Arrays.asList(RANKS).contains(rank)) {
-            player.sendSystemMessage(
-                Component.literal("Invalid kit.")
-            );
+            player.sendSystemMessage(Component.literal("Invalid kit."));
             return;
         }
 
-        boolean isOp = player.level().getServer()
-            .getPlayerList()
-            .isOp(player.nameAndId());
+        boolean isOp = KitEditor.isOperator(player);
 
         User user = LuckPermsProvider.get()
             .getUserManager()
@@ -58,9 +52,7 @@ public class KitClaimManager {
 
         if (user == null && !isOp) {
             player.sendSystemMessage(
-                Component.literal(
-                    "Your LuckPerms data is not loaded."
-                )
+                Component.literal("Your LuckPerms data is not loaded.")
             );
             return;
         }
@@ -70,9 +62,7 @@ public class KitClaimManager {
 
         if (!isOp && !playerRank.equals(rank)) {
             player.sendSystemMessage(
-                Component.literal(
-                    "You can only claim your own rank kit!"
-                )
+                Component.literal("You can only claim your own rank kit!")
             );
             return;
         }
@@ -105,14 +95,12 @@ public class KitClaimManager {
             }
         }
 
-        // Give the original armor and equipment.
         player.level().getServer().getCommands()
             .performPrefixedCommand(
                 player.createCommandSourceStack(),
                 "function enchantedkits:kitarmor_" + rank
             );
 
-        // Give the items saved in the Kit Editor.
         KitEditor.giveSavedItems(player, rank);
 
         if (!noCooldown) {
@@ -124,9 +112,7 @@ public class KitClaimManager {
         }
 
         player.sendSystemMessage(
-            Component.literal(
-                "You claimed the " + rank + " kit!"
-            )
+            Component.literal("You claimed the " + rank + " kit!")
         );
     }
 
@@ -147,10 +133,7 @@ public class KitClaimManager {
             Files.createDirectories(FILE.getParent());
 
             try (OutputStream output = Files.newOutputStream(FILE)) {
-                COOLDOWNS.store(
-                    output,
-                    "EnchantedKits cooldowns"
-                );
+                COOLDOWNS.store(output, "EnchantedKits cooldowns");
             }
         } catch (IOException exception) {
             exception.printStackTrace();
