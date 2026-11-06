@@ -1,4 +1,4 @@
-import net.minecraft.server.players.NameAndId;
+
 package com.enchantedsmp.enchantedkits;
 
 import net.luckperms.api.LuckPermsProvider;
@@ -6,8 +6,8 @@ import net.luckperms.api.model.user.User;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ChestMenu;
@@ -16,6 +16,8 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+
+import java.util.Locale;
 
 public class KitMenu {
 
@@ -45,21 +47,18 @@ public class KitMenu {
     };
 
     public static void open(ServerPlayer player) {
-
         SimpleContainer inventory = new SimpleContainer(27);
 
-        boolean isOp = player.level().getServer()
-    .getPlayerList()
-    .isOp(new NameAndId(player.getGameProfile()));
+        boolean isOp = KitEditor.isOperator(player);
 
         User user = LuckPermsProvider.get()
-            .getUserManager().getUser(player.getUUID());
+            .getUserManager()
+            .getUser(player.getUUID());
 
         String playerRank = user == null ? "" :
-            user.getPrimaryGroup().toLowerCase();
+            user.getPrimaryGroup().toLowerCase(Locale.ROOT);
 
         for (int i = 0; i < RANKS.length; i++) {
-
             boolean unlocked = isOp || playerRank.equals(RANKS[i]);
 
             ItemStack icon;
@@ -122,51 +121,42 @@ public class KitMenu {
             ContainerInput input,
             Player player
         ) {
-
             if (slot >= 0 && slot < 27) {
+                if (!(player instanceof ServerPlayer serverPlayer)) {
+                    return;
+                }
 
-                if (player instanceof ServerPlayer serverPlayer) 
+                boolean isOp = KitEditor.isOperator(serverPlayer);
 
-                    boolean isOp = serverPlayer.level().getServer()
-    .getPlayerList()
-    .isOp(new NameAndId(serverPlayer.getGameProfile()));
+                if (slot == 26 && isOp) {
+                    serverPlayer.closeContainer();
+                    KitEditor.open(serverPlayer);
+                    return;
+                }
 
-                    for (int i = 0; i < RANKS.length; i++) {
+                for (int i = 0; i < RANKS.length; i++) {
+                    if (slot == SLOTS[i]) {
+                        User user = LuckPermsProvider.get()
+                            .getUserManager()
+                            .getUser(serverPlayer.getUUID());
 
-                        if (slot == SLOTS[i]) {
+                        String playerRank = user == null ? "" :
+                            user.getPrimaryGroup().toLowerCase(Locale.ROOT);
 
-                            User user = LuckPermsProvider.get()
-                                .getUserManager()
-                                .getUser(serverPlayer.getUUID());
-
-                            String playerRank = user == null ? "" :
-                                user.getPrimaryGroup().toLowerCase();
-
-                            if (!isOp && !playerRank.equals(RANKS[i])) {
-                                serverPlayer.sendSystemMessage(
-                                    Component.literal(
-                                        "§c✖ You cannot claim this rank's kit!"
-                                    )
-                                );
-                                return;
-                            }
-
-                            serverPlayer.closeContainer();
-
-                            KitClaimManager.claimArmor(
-                                serverPlayer,
-                                RANKS[i]
+                        if (!isOp && !playerRank.equals(RANKS[i])) {
+                            serverPlayer.sendSystemMessage(
+                                Component.literal(
+                                    "§c✖ You cannot claim this rank's kit!"
+                                )
                             );
-
                             return;
                         }
-                    }
 
-                    if (slot == 26 && isOp) {
-                        serverPlayer.sendSystemMessage(
-                            Component.literal(
-                                "Kit Editor will be added next!"
-                            )
+                        serverPlayer.closeContainer();
+
+                        KitClaimManager.claimArmor(
+                            serverPlayer,
+                            RANKS[i]
                         );
                         return;
                     }
