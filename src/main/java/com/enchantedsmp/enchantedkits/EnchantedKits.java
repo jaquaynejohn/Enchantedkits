@@ -15,31 +15,11 @@ public class EnchantedKits implements ModInitializer {
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
 
             dispatcher.register(Commands.literal("kit")
+
                 .executes(context -> {
                     var player = context.getSource().getPlayerOrException();
 
-                    var luckPerms = LuckPermsProvider.get();
-                    User user = luckPerms.getUserManager().getUser(player.getUUID());
-
-                    if (user == null) {
-                        context.getSource().sendSuccess(
-                            () -> Component.literal("Your rank could not be loaded."),
-                            false
-                        );
-                        return 0;
-                    }
-
-                    String rank = user.getPrimaryGroup();
-
-                    context.getSource().sendSuccess(
-                        () -> Component.literal(
-                            "§6§lEnchantedSMP Kits\n" +
-                            "§7Your Rank: §e" + rank + "\n" +
-                            "§7Available command: §a/kit claim\n" +
-                            "§8More kit options coming soon!"
-                        ),
-                        false
-                    );
+                    KitMenu.open(player);
 
                     return 1;
                 })
@@ -47,10 +27,16 @@ public class EnchantedKits implements ModInitializer {
                 .then(Commands.literal("rank")
                     .executes(context -> {
                         var player = context.getSource().getPlayerOrException();
+
                         var luckPerms = LuckPermsProvider.get();
                         User user = luckPerms.getUserManager().getUser(player.getUUID());
 
-                        if (user == null) return 0;
+                        if (user == null) {
+                            context.getSource().sendFailure(
+                                Component.literal("Your rank could not be loaded.")
+                            );
+                            return 0;
+                        }
 
                         context.getSource().sendSuccess(
                             () -> Component.literal(
