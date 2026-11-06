@@ -54,9 +54,9 @@ public class KitEditor {
         new GsonBuilder().setPrettyPrinting().create();
 
     public static boolean isOperator(ServerPlayer player) {
-        return player.level().getServer()
-            .getPlayerList()
-            .isOp(new NameAndId(player.getGameProfile()));
+    return player.level().getServer()
+        .getPlayerList()
+        .isOp(player.nameAndId());
     }
 
     public static void open(ServerPlayer player) {
