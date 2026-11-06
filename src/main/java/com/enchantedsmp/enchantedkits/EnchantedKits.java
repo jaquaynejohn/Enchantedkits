@@ -1,12 +1,16 @@
 package com.enchantedsmp.enchantedkits;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 
 public class EnchantedKits implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            // Kit commands will be registered here.
+        });
+
         System.out.println("EnchantedKits loaded!");
-        System.out.println("EnchantedKits is ready for setup!");
     }
 }
