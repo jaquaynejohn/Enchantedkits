@@ -1,3 +1,4 @@
+import net.minecraft.server.players.NameAndId;
 package com.enchantedsmp.enchantedkits;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -42,7 +43,7 @@ public class KitClaimManager {
         }
 
         boolean isOp = player.level().getServer().getPlayerList()
-    .isOp(player.getGameProfile());
+    .isOp(new NameAndId(player.getGameProfile()));
 
         User user = LuckPermsProvider.get()
             .getUserManager().getUser(player.getUUID());
@@ -90,11 +91,11 @@ public class KitClaimManager {
             }
         }
 
-        int result = player.level().getServer().getCommands()
-            .performPrefixedCommand(
-                player.createCommandSourceStack(),
-                "function enchantedkits:kitarmor_" + selectedRank
-            );
+        player.level().getServer().getCommands()
+    .performPrefixedCommand(
+        player.createCommandSourceStack(),
+        "function enchantedkits:kitarmor_" + selectedRank
+    );
 
         if (result <= 0) {
             player.sendSystemMessage(Component.literal(
