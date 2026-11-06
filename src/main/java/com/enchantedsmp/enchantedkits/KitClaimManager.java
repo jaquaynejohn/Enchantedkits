@@ -1,4 +1,3 @@
-
 package com.enchantedsmp.enchantedkits;
 
 import net.fabricmc.loader.api.FabricLoader;
