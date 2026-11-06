@@ -1,4 +1,3 @@
-import net.minecraft.server.players.NameAndId;
 package com.enchantedsmp.enchantedkits;
 
 import net.fabricmc.loader.api.FabricLoader;
@@ -12,15 +11,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
 
 public class KitClaimManager {
 
-    private static final long COOLDOWN = 24L * 60 * 60 * 1000;
+    private static final long COOLDOWN =
+        24L * 60L * 60L * 1000L;
 
     private static final Path FILE = FabricLoader.getInstance()
-        .getConfigDir().resolve("enchantedkits-cooldowns.properties");
+        .getConfigDir()
+        .resolve("enchantedkits-cooldowns.properties");
 
     private static final Properties COOLDOWNS = new Properties();
 
@@ -33,44 +35,50 @@ public class KitClaimManager {
         load();
     }
 
-    public static void claimArmor(ServerPlayer player, String selectedRank) {
+    public static void claimArmor(
+        ServerPlayer player,
+        String selectedRank
+    ) {
+        String rank = selectedRank.toLowerCase(Locale.ROOT);
 
-        selectedRank = selectedRank.toLowerCase(Locale.ROOT);
-
-        if (!java.util.Arrays.asList(RANKS).contains(selectedRank)) {
-            player.sendSystemMessage(Component.literal("Invalid kit."));
+        if (!Arrays.asList(RANKS).contains(rank)) {
+            player.sendSystemMessage(
+                Component.literal("Invalid kit.")
+            );
             return;
         }
 
-        boolean isOp = player.level().getServer().getPlayerList()
-    .isOp(new NameAndId(player.getGameProfile()));
+        boolean isOp = player.level().getServer()
+            .getPlayerList()
+            .isOp(player.nameAndId());
 
         User user = LuckPermsProvider.get()
-            .getUserManager().getUser(player.getUUID());
+            .getUserManager()
+            .getUser(player.getUUID());
 
         if (user == null && !isOp) {
-            player.sendSystemMessage(Component.literal(
-                "Your LuckPerms data is not loaded."
-            ));
+            player.sendSystemMessage(
+                Component.literal("Your LuckPerms data is not loaded.")
+            );
             return;
         }
 
         String playerRank = user == null ? "" :
             user.getPrimaryGroup().toLowerCase(Locale.ROOT);
 
-        if (!isOp && !playerRank.equals(selectedRank)) {
-            player.sendSystemMessage(Component.literal(
-                "You can only claim your own rank kit!"
-            ));
+        if (!isOp && !playerRank.equals(rank)) {
+            player.sendSystemMessage(
+                Component.literal("You can only claim your own rank kit!")
+            );
             return;
         }
 
         boolean noCooldown =
-            selectedRank.equals("owner") ||
-            selectedRank.equals("coowner") ||
-            selectedRank.equals("admin");
+            rank.equals("owner") ||
+            rank.equals("coowner") ||
+            rank.equals("admin");
 
-        String key = player.getUUID() + ":" + selectedRank;
+        String key = player.getUUID() + ":" + rank;
         long now = System.currentTimeMillis();
 
         if (!noCooldown) {
@@ -83,37 +91,33 @@ public class KitClaimManager {
                 long hours = remaining / 3600;
                 long minutes = (remaining % 3600) / 60;
 
-                player.sendSystemMessage(Component.literal(
-                    "Your kit is on cooldown! Time remaining: "
-                    + hours + "h " + minutes + "m"
-                ));
+                player.sendSystemMessage(
+                    Component.literal(
+                        "Kit cooldown: " + hours + "h "
+                            + minutes + "m remaining."
+                    )
+                );
                 return;
             }
         }
 
         player.level().getServer().getCommands()
-    .performPrefixedCommand(
-        player.createCommandSourceStack(),
-        "function enchantedkits:kitarmor_" + selectedRank
-    );
-
-        if (result <= 0) {
-            player.sendSystemMessage(Component.literal(
-                "The kit could not be given. Check that its function exists."
-            ));
-            return;
-        }
+            .performPrefixedCommand(
+                player.createCommandSourceStack(),
+                "function enchantedkits:kitarmor_" + rank
+            );
 
         if (!noCooldown) {
             COOLDOWNS.setProperty(
-                key, String.valueOf(now + COOLDOWN)
+                key,
+                String.valueOf(now + COOLDOWN)
             );
             save();
         }
 
-        player.sendSystemMessage(Component.literal(
-            "You claimed the " + selectedRank + " kit!"
-        ));
+        player.sendSystemMessage(
+            Component.literal("You claimed the " + rank + " kit!")
+        );
     }
 
     private static void load() {
@@ -123,8 +127,8 @@ public class KitClaimManager {
                     COOLDOWNS.load(input);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException exception) {
+            exception.printStackTrace();
         }
     }
 
@@ -133,10 +137,13 @@ public class KitClaimManager {
             Files.createDirectories(FILE.getParent());
 
             try (OutputStream output = Files.newOutputStream(FILE)) {
-                COOLDOWNS.store(output, "EnchantedKits cooldowns");
+                COOLDOWNS.store(
+                    output,
+                    "EnchantedKits cooldowns"
+                );
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException exception) {
+            exception.printStackTrace();
         }
     }
 }
