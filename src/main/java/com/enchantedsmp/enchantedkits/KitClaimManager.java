@@ -41,8 +41,8 @@ public class KitClaimManager {
             return;
         }
 
-        boolean isOp = player.getServer().getPlayerList()
-            .isOp(player.getGameProfile());
+        boolean isOp = player.level().getServer().getPlayerList()
+    .isOp(player.getGameProfile());
 
         User user = LuckPermsProvider.get()
             .getUserManager().getUser(player.getUUID());
